@@ -109,7 +109,7 @@ app.post('/acceptCredentials',(req,res)=>{
 //request credential testtttttttttt
 const testFunc=async()=>{
   try {
-    	const res=await axios.get('http://ec2-13-235-238-26.ap-south-1.compute.amazonaws.com:8080/')
+    	const res=await axios.get('http://ec2-13-235-238-26.ap-south-1.compute.amazonaws.com:8081/')
     	// axios.get('http://ec2-13-235-238-26.ap-south-1.compute.amazonaws.com:8080/')
     	// .then(response=>{
     	// 	console.log(response.data)
