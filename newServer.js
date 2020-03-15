@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt-nodejs');
 const cors = require('cors');
 const knex = require('knex');
+const axios= require('axios');
 //const router = express.Router();
 //var session = require('express-session');
 //var cookieParser = require('cookie-parser');
@@ -40,7 +41,7 @@ app.get('/', (req, res)=> {
 // initiator is user- sharing
 //intiator is trust anchor- issuing
 app.post('/initateConnection',(req,res)=>{
-	console.log("initiating connection")
+	console.log("initiating connection",req.body.inviter)
 	db('connection_status').returning('*').insert({'inviter':req.body.inviter,'invitee':req.body.invitee,'type':req.body.type})
 	.then(response=>{
 		console.log("Inserting");
@@ -105,9 +106,33 @@ app.post('/acceptCredentials',(req,res)=>{
 
 //accept credentials
 
+//request credential testtttttttttt
+const testFunc=async()=>{
+  try {
+    	const res=await axios.get('http://ec2-13-235-238-26.ap-south-1.compute.amazonaws.com:8080/')
+    	// axios.get('http://ec2-13-235-238-26.ap-south-1.compute.amazonaws.com:8080/')
+    	// .then(response=>{
+    	// 	console.log(response.data)
+    	// 	return response.data
+    	// })
+    	console.log("Callingnn",res.data)
+    	return res.data
+  } catch (error) {
+    //console.error(error)
+  }
+}
+
+
+app.post('/reqCredTest',async(req,res)=>{
+	console.log("making crdentail reauest Test")
+	
+	const testRes= await testFunc()
+	console.log("-------------------------------+",testRes)
+	res.send(testRes)
+})
 
 
 
-app.listen(3000, ()=> {
-  console.log('NEW app is running on port 3000');
+app.listen(8080, ()=> {
+  console.log('NEW app is running on port 8080');
 })
