@@ -54,7 +54,7 @@ app.post('/initateConnectionn',(req,res)=>{
 
 app.post('/initateConnection',(req,res)=>{
 	console.log("initiating connection",req.body.inviter)
-	db('connection_status').returning('*').insert({'inviter':req.body.inviter,'invitee':req.body.invitee,'type':req.body.type})
+	db('connection_status').returning('*').insert({'inviter':req.body.inviter,'invitee':req.body.invitee,'status':req.body.status})
 	.then(response=>{
 		console.log("Inserting");
 	res.json(response);
