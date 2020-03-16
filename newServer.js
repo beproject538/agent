@@ -37,6 +37,7 @@ app.get('/', (req, res)=> {
 	console.log("test")
 })
 
+//---------------------------apis for connections------------------------------
 //from user, issuer
 // initiator is user- sharing
 //intiator is trust anchor- issuing
@@ -53,7 +54,7 @@ app.post('/initateConnection',(req,res)=>{
 //to check for pending requests
 app.post('/checkPendingRequests',(req,res)=>{
 	console.log("Checking pending requests")
-	db.select('*').from('connection_status').where({'invitee':req.body.inviteeDID,'status':'initiated'})
+	db.select('*').from('connection_status').where({'invitee':req.body.invitee,'status':'initiated'})
 	.then(response=>{
 		res.json(response);
 	})
@@ -63,13 +64,14 @@ app.post('/checkPendingRequests',(req,res)=>{
 //get connections
 app.post('/getConnections',(req,res)=>{
 	console.log("Retrieving active connections")
-	db.select('*').from('connection_status').where({'invitee':req.body.invitee,'status':'connected'})
+	db.select('*').from('connection_status').where({'invitee':req.body.invitee,'status':'connected'}).orWhere({'inviter':req.body.invitee,'status':'connected'})
 	.then(response=>{
 		console.log(response)
 		res.json(response);
 	})
 })
 
+//---------------------------apis for connections END------------------------------
 
 //accept connection
 app.post('/acceptConnection',(req,res)=>{
