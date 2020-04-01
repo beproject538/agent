@@ -152,6 +152,176 @@ app.post('/acceptConnection',(req,res)=>{
 //request
 //respond
 //acknowledgement
+app.post('/initiateConnection',(req,res)=>{
+	console.log("Inside initiate connection")
+	//make offer
+	var offerStatus=0;
+	var requestStatus=0;
+	var responseStatus=0;
+	var ackStatus=0;;
+	const token1=req.headers.authorization;
+	const token2=req.body.token;
+	const did=req.body.did;
+	axios.post(ledgerUrl+'/sendConnectionOffer',
+		{
+			recipientDid:req.body.recipientDid
+		},
+		{headers:{"Authorization":`Bearer ${token1}`}}
+	)
+	.then(response=>{
+		console.log("In response",response.data,"did",response.did)
+		db('connection_status_1').returning('*').insert({'senderdid':response.data.did,'recipientdid':response.data.recipientDid,'status':'offered'})
+		.then(queryResponse=>{
+			console.log("Insert query response",queryResponse)
+			offerStatus=1;
+			console.log("---------------------------Offer done",offerStatus)
+			if(offerStatus==1)//make request
+			{
+				console.log("---------------------------Making request")
+				const metadata="requestfrom-"+req.body.did;
+				axios.post(ledgerUrl+'/sendConnectionRequest',
+				{
+					recipientDid:req.body.did,
+					metadata:metadata
+				},
+				{headers:{"Authorization":`Bearer ${token2}`}}
+					)
+				.then(response1=>{
+					console.log("Axios response",response1.data,response1.data.connectionRequest.recipientDid,response1.data.connectionRequest)
+					if(response1.data.msg==='nym request sent')
+					{
+						console.log(response1.data.msg)
+						db('connection_status_1').returning('*').where({'senderdid':response1.data.connectionRequest.recipientDid,'recipientdid':response1.data.connectionRequest.did,'status':'offered'}).update({'status':'requested'})
+						.then(queryResponse1=>{
+							console.log("queryResponse",queryResponse1)
+							//res.send(response.data)
+							requestStatus=1;
+							console.log("---------------------------Request done",requestStatus)
+							if(offerStatus==1 && requestStatus==1)
+							{
+								const metadata="responseto-"+req.body.recipientDid;
+								axios.post(ledgerUrl+'/sendConnectionResponse',
+								{
+									recipientDid:req.body.recipientDid,
+									metadata:metadata
+								},
+								{headers:{"Authorization":`Bearer ${token1}`}}
+									)
+								.then(response2=>{
+									console.log("Axios response",response2.data,response2.data.connectionResponse.recipientDid,response2.data.connectionResponse.did)
+									console.log(response2.data.msg)
+									db('connection_status_1').returning('*').where({'senderdid':response2.data.connectionResponse.did,'recipientdid':response2.data.connectionResponse.recipientDid,'status':'requested'}).update({'status':'responded'})
+									.then(queryResponse2=>{
+										console.log("queryResponse",queryResponse2)
+										//res.send(response.data)
+										responseStatus=1;
+										console.log("---------------------------Response done",responseStatus)
+										if(offerStatus==1 && requestStatus==1 && responseStatus==1)
+										{
+											const metadata="ack from-"+req.body.recipientDid;
+											axios.post(ledgerUrl+'/sendAcknowledgement',
+											{
+												recipientDid:req.body.did
+											},
+											{headers:{"Authorization":`Bearer ${token2}`}}
+												)
+											.then(response3=>{
+												console.log("Axios response",response3.data)
+												//if(response.data.msg==='nym request sent')
+												{
+													//console.log(response.data.msg)
+													db('connection_status_1').returning('*').where({'senderdid':response3.data.Response.did,'recipientdid':response3.data.Response.recipientDid,'status':'responded'}).update({'status':'connected'})
+													.then(queryResponse3=>{
+														console.log("queryResponse",queryResponse3)
+														ackStatus=1;
+														res.send(response3.data)
+													})
+												}
+											})
+										}
+									})
+								})
+							}
+						})
+					}
+				})
+			}
+		})
+	})
+	// if(offerStatus==1)//make request
+	// {
+	// 	console.log("---------------------------Making request")
+	// 	const metadata="requestfrom-"+req.body.did;
+	// 	axios.post(ledgerUrl+'/sendConnectionRequest',
+	// 	{
+	// 		recipientDid:req.body.did,
+	// 		metadata:metadata
+	// 	},
+	// 	{headers:{"Authorization":`Bearer ${token2}`}}
+	// 		)
+	// 	.then(response=>{
+	// 		console.log("Axios response",response.data,response.data.connectionRequest.recipientDid,response.data.connectionRequest)
+	// 		if(response.data.msg==='nym request sent')
+	// 		{
+	// 			console.log(response.data.msg)
+	// 			db('connection_status_1').returning('*').where({'senderdid':response.data.connectionRequest.recipientDid,'recipientdid':response.data.connectionRequest.did,'status':'offered'}).update({'status':'requested'})
+	// 			.then(queryResponse=>{
+	// 				console.log("queryResponse",queryResponse)
+	// 				//res.send(response.data)
+	// 				requestStatus=1;
+	// 				console.log("---------------------------Request done",requestStatus)
+	// 			})
+	// 		}
+	// 	})
+	// }
+	// if(offerStatus==1 && requestStatus==1)
+	// {
+	// 	const metadata="responseto-"+req.body.recipientDid;
+	// 	axios.post(ledgerUrl+'/sendConnectionResponse',
+	// 	{
+	// 		recipientDid:req.body.recipientDid,
+	// 		metadata:metadata
+	// 	},
+	// 	{headers:{"Authorization":`Bearer ${token1}`}}
+	// 		)
+	// 	.then(response=>{
+	// 		console.log("Axios response",response.data,response.data.connectionResponse.recipientDid,response.data.connectionResponse.did)
+	// 		console.log(response.data.msg)
+	// 		db('connection_status_1').returning('*').where({'senderdid':response.data.connectionResponse.did,'recipientdid':response.data.connectionResponse.recipientDid,'status':'requested'}).update({'status':'responded'})
+	// 		.then(queryResponse=>{
+	// 			console.log("queryResponse",queryResponse)
+	// 			//res.send(response.data)
+	// 			responseStatus=1;
+	// 			console.log("---------------------------Response done",responseStatus)
+	// 		})
+	// 	})
+	// }
+	// if(offerStatus==1 && requestStatus==1 && responseStatus==1)
+	// {
+	// 	const metadata="ack from-"+req.body.recipientDid;
+	// 	axios.post(ledgerUrl+'/sendAcknowledgement',
+	// 	{
+	// 		recipientDid:req.body.did
+	// 	},
+	// 	{headers:{"Authorization":`Bearer ${token2}`}}
+	// 		)
+	// 	.then(response=>{
+	// 		console.log("Axios response",response.data)
+	// 		//if(response.data.msg==='nym request sent')
+	// 		{
+	// 			//console.log(response.data.msg)
+	// 			db('connection_status_1').returning('*').where({'senderdid':response.data.Response.did,'recipientdid':response.data.Response.recipientDid,'status':'responded'}).update({'status':'connected'})
+	// 			.then(queryResponse=>{
+	// 				console.log("queryResponse",queryResponse)
+	// 				ackStatus=1;
+	// 				res.send(response.data)
+	// 			})
+	// 		}
+	// 	})
+	// }
+})
+
+
 app.post('/makeConnectionOffer',(req,res)=>{
 	console.log("Making connection offer from- ",req.headers.authorization," to-",req.body.recipientDid);
 	
