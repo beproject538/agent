@@ -92,25 +92,6 @@ app.post('/createDid',(req,res)=>{
 // initiator is user- sharing
 //intiator is trust anchor- issuing
 
-app.post('/initateConnectionn',(req,res)=>{
-	console.log("initiating connection",req.body.inviter)
-	db('connection_status').returning('*').insert({'inviter':req.body.inviter,'invitee':req.body.invitee,'type':req.body.type})
-	.then(response=>{
-		console.log("Inserting");
-	res.json(response);
-	})
-	.catch(err=>res.status(400).json('error Inserting data'))
-})
-
-app.post('/initateConnection',(req,res)=>{
-	console.log("initiating connection",req.body.inviter)
-	db('connection_status').returning('*').insert({'inviter':req.body.inviter,'invitee':req.body.invitee,'status':req.body.status})
-	.then(response=>{
-		console.log("Inserting");
-	res.json(response);
-	})
-	.catch(err=>res.status(400).json('error Inserting data'))
-})
 
 //to check for pending requests
 app.post('/checkPendingRequests',(req,res)=>{
@@ -131,16 +112,6 @@ app.post('/getConnections',(req,res)=>{
 		console.log(response)
 		res.json(response);
 	})
-})
-
-//accept connection
-app.post('/acceptConnection',(req,res)=>{
-	console.log("Accepting connection number ", req.body.conid)
-   	db('connection_status').returning('*').where({'conid':req.body.conid}).update({'status':'connected'})
-   	.then(response=>{
-   		console.log("Connection accepted")
-   		res.json(response);
-   	})
 })
 
 //---------------------------apis for connections END------------------------------
