@@ -77,7 +77,7 @@ app.post('/createDid',(req,res)=>{
 	)
 	.then(response=>{
 		console.log(response.data)
-		db('role_1').returning('*').insert({'did':response.data.did,'role':req.body.role,'name':req.body.name})
+		db('role_1').returning('*').insert({'did':response.data.did,'role':req.body.role,'name':req.body.name,'verkey':response.data.verkey})
 		.then(queryResponse=>{
 			console.log("queryResponse",queryResponse)
 		})
@@ -234,6 +234,61 @@ app.post('/sendConnectionResponse',(req,res)=>{
 			})
 		//}
 	})
+})
+
+app.post('/sendConnectionAck',(req,res)=>{
+	console.log("acknowledgement from",req.headers.authorization," to-",req.body.recipientDid)
+	const token=req.headers.authorization;
+	const metadata="requestfrom-"+req.body.recipientDid;
+	axios.post(ledgerUrl+'/sendAcknowledgement',
+	{
+		recipientDid:req.body.recipientDid
+	},
+	{headers:{"Authorization":`Bearer ${token}`}}
+		)
+	.then(response=>{
+		console.log("Axios response",response.data)
+		//if(response.data.msg==='nym request sent')
+		{
+			//console.log(response.data.msg)
+			db('connection_status_1').returning('*').where({'senderdid':response.data.Response.did,'recipientdid':response.data.Response.recipientDid,'status':'responded'}).update({'status':'connected'})
+			.then(queryResponse=>{
+				console.log("queryResponse",queryResponse)
+				res.send(response.data)
+			})
+		}
+	})
+})
+
+const testt={
+    "response": {
+        "n": 1,
+        "nModified": 1,
+        "ok": 1
+    },
+    "Response": {
+        "@id": "connection-response",
+        "acknowledged": true,
+        "_id": "5e7f000cc518572687b3aeff",
+        "did": "7bXTiH61batvZYagUxaGkR",
+        "newDid": "BG9LdcDn8nA7KB8G2fbqh8",
+        "newKey": "6bNfjDtvf2bH6vcPj2nazSnuXZC4Uv3XtG7gKB4g6syS",
+        "ip": "172.31.32.242",
+        "recipientDid": "81LAnQxQfNAvNtJphoxzhR",
+        "owner": "5e7efdf8c518572687b3aef6",
+        "createdAt": "2020-03-28T07:43:08.597Z",
+        "updatedAt": "2020-03-28T07:45:20.180Z",
+        "__v": 0
+    },
+    "nymInfo": {
+        "role": null,
+        "msg": "nym request sent"
+    },
+    "msg": "Connected yay!!!!  UwU"
+};
+
+app.get('/test',(req,res)=>{
+	console.log(testt.Response.did)
 })
 
 app.get('/getPendingOffers',(req,res)=>{
