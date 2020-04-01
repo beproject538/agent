@@ -54,7 +54,7 @@ app.post('/createWallet',(req,res)=>{
 	)
 	.then(response=>{
 		console.log("In response",response.data)
-		res.send(response.data)
+		res.send(response.data.token)
 	})
 	.catch(err=>res.status(400).json('Unable to create wallet'))
 })
