@@ -87,17 +87,23 @@ app.post('/createDid',(req,res)=>{
 
 //---------------------------END apis for registering-----------------------------
 
-//---------------------------apis for connections------------------------------
-//from user, issuer
-// initiator is user- sharing
-//intiator is trust anchor- issuing
 
+app.get('/getPendingOffers',(req,res)=>{
+	console.log("Getting pending requests");
+	const token=req.headers.authorization;
+	axios.get(ledgerUrl+'/pendingConnectionOffer',{headers:{"Authorization":`Bearer ${token}`}})
+	.then(response=>{
+		console.log("ledger response",response.data)
+		res.send(response.data)
+	})
+})
 
 //to check for pending requests
-app.post('/checkPendingRequests',(req,res)=>{
-	console.log("Checking pending requests")
-	db.select('*').from('connection_status').where({'invitee':req.body.invitee,'status':'initiated'})
+app.post('/getPendingConnections',(req,res)=>{
+	console.log("Checking pending connections")
+	db.select('*').from('connection_status_1').where({'senderdid':req.body.did}).whereNot({'status':'connected'}).orWhere({'recipientdid':req.body.did}).whereNot({'status':'connected'})
 	.then(response=>{
+		console.log("Yes",response)
 		res.json(response);
 	})
 	.catch(err=>res.status(400).json('error retrieving data'))
@@ -107,17 +113,14 @@ app.post('/checkPendingRequests',(req,res)=>{
 //get connections
 app.post('/getConnections',(req,res)=>{
 	console.log("Retrieving active connections")
-	db.select('*').from('connection_status').where({'invitee':req.body.invitee,'status':'connected'}).orWhere({'inviter':req.body.invitee,'status':'connected'})
+	db.select('*').from('connection_status_1').where({'senderdid':req.body.did,'status':'connected'}).orWhere({'recipientdid':req.body.did,'status':'connected'})
 	.then(response=>{
 		console.log(response)
 		res.json(response);
 	})
 })
 
-//---------------------------apis for connections END------------------------------
 
-
-//---------------------------INDY apis for sharing credentials--------------------------
 
 //offer
 //request
@@ -401,46 +404,8 @@ app.post('/sendConnectionAck',(req,res)=>{
 	})
 })
 
-const testt={
-    "response": {
-        "n": 1,
-        "nModified": 1,
-        "ok": 1
-    },
-    "Response": {
-        "@id": "connection-response",
-        "acknowledged": true,
-        "_id": "5e7f000cc518572687b3aeff",
-        "did": "7bXTiH61batvZYagUxaGkR",
-        "newDid": "BG9LdcDn8nA7KB8G2fbqh8",
-        "newKey": "6bNfjDtvf2bH6vcPj2nazSnuXZC4Uv3XtG7gKB4g6syS",
-        "ip": "172.31.32.242",
-        "recipientDid": "81LAnQxQfNAvNtJphoxzhR",
-        "owner": "5e7efdf8c518572687b3aef6",
-        "createdAt": "2020-03-28T07:43:08.597Z",
-        "updatedAt": "2020-03-28T07:45:20.180Z",
-        "__v": 0
-    },
-    "nymInfo": {
-        "role": null,
-        "msg": "nym request sent"
-    },
-    "msg": "Connected yay!!!!  UwU"
-};
+//---------------------------apis for connections END------------------------------
 
-app.get('/test',(req,res)=>{
-	console.log(testt.Response.did)
-})
-
-app.get('/getPendingOffers',(req,res)=>{
-	console.log("Getting pending requests");
-	const token=req.headers.authorization;
-	axios.get(ledgerUrl+'/pendingConnectionOffer',{headers:{"Authorization":`Bearer ${token}`}})
-	.then(response=>{
-		console.log("ledger response",response.data)
-		res.send(response.data)
-	})
-})
 
 //, { headers: {"Authorization" : `Bearer ${JWTToken}`} }
 //---------------------------INDY apis for sharing credentials END--------------------------
