@@ -26,7 +26,6 @@ const app = express();
 
 app.use(cors())
 app.use(bodyParser.json());
-//app.use(session({resave: true, saveUninitialized: true, secret: 'SOMERANDOMSECRETHERE', cookie: { maxAge: 60000 }}));
 
 
 
@@ -86,7 +85,7 @@ app.post('/createDid',(req,res)=>{
 })
 
 //---------------------------END apis for registering-----------------------------
-
+//---------------------------apis for connections-----------------------------
 
 app.get('/getPendingOffers',(req,res)=>{
 	console.log("Getting pending requests");
@@ -405,48 +404,116 @@ app.post('/sendConnectionAck',(req,res)=>{
 })
 
 //---------------------------apis for connections END------------------------------
-
-
-//, { headers: {"Authorization" : `Bearer ${JWTToken}`} }
-//---------------------------INDY apis for sharing credentials END--------------------------
 //---------------------------apis for sharing credentials--------------------------
-app.post('/requestCredentialsFromIssuer',async(req,res)=>{
-	console.log("requestCredentialsFromIssuer")
-	var baseurl='';
-	db.select('*').from('ta_details').where({'taid':req.body.taid/*,'userDID':req.body.did,'name':req.body.name*/})
+app.post('/createSchema',(req,res)=>{
+	console.log("Creating schemas")
+	const token=req.headers.authorization;
+	axios.post(ledgerUrl+'/createSchema',
+	{
+		name:req.body.name,
+		attrNames:req.body.attrNames
+	},
+	{headers:{"Authorization":`Bearer ${token}`}}
+		)
 	.then(response=>{
-		baseurl=response[0].url;
-		console.log("insiude",baseurl)
-		axios.get(baseurl)
-		.then(axiosresp=>{
-			console.log("axios resp",axiosresp.data)
-			res.json(axiosresp.data)
+		console.log("Axios response")
+		db('credential_schema_1').returning('*').insert({'schemaname':req.body.name,'attributes':req.body.attrNames})
+		.then(queryResponse=>{
+			res.send(response.data)
 		})
 	})
 })
 
+app.post('/createCredDef',(req,res)=>{
+	console.log("making credDef")
+	const token=req.headers.authorization;
+	axios.post(ledgerUrl+'/createCredDef',
+	{
+		name:req.body.name
+	},
+	{headers:{"Authorization":`Bearer ${token}`}}
+		)
+	.then(response=>{
+		console.log("Axios response",response.data)
+		//db('credential_schema_1').returning('*').where({'name':req.body.name}).update({'cred_def':'created'})
+		//.then(queryResponse=>{
+			//console.log("queryResponse",queryResponse)
+			
+		//})
+		res.send(response.data)
+	})
+})
+
+
+app.post('/createCredentialOffer',(req,res)=>{
+	console.log("Creating cred offer")
+	const token=req.headers.authorization;
+	axios.post(ledgerUrl+'/createCredentialOffer',
+	{
+		recipientDid:req.body.recipientDid,
+		name:req.body.name
+	},
+	{headers:{"Authorization":`Bearer ${token}`}}
+		)
+	.then(response=>{
+		console.log("Axios response",response.data)
+		if(response.data.authCryptOffer.type==='Buffer')
+		{
+			db('credential_status_1').returning('*').insert({'schemaname':req.body.name,'senderdid':req.body.did,'recipientdid':req.body.recipientDid,'status':'offered'})
+			.then(queryResponse=>{
+				res.send(response.data)
+			})
+		}
+	})
+	.catch(err=>res.status(400).json('Unable to send offer'))
+})
+
+app.post('/createCredentialRequest',(req,res)=>{
+	console.log("making cred Req")
+	const token=req.headers.authorization;
+	axios.post(ledgerUrl+'/createCredentialRequest',
+	{
+		recipientDid:req.body.recipientDid
+	},
+	{headers:{"Authorization":`Bearer ${token}`}}
+		)
+	.then(response=>{
+		console.log("Axios response",response.data)
+		db('credential_status_1').returning('*').where({'senderdid':req.body.recipientDid,'recipientdid':req.body.did,'status':'offered'}).update({'status':'accepted'})
+		.then(queryResponse=>{
+			console.log("queryResponse",queryResponse)
+			res.send(response.data)
+		})
+	})
+	.catch(err=>res.status(400).json('Unable to send request'))
+})
+
+app.post('/sendCredential',(req,res)=>{
+	console.log("making cred")
+	const token=req.headers.authorization;
+	const obj={
+	"recipientDid": "5Umo8Wn6qC221WZQnBh4Hk",
+	"credValues": {
+		"name": {"raw": "Tejas", "encoded": "12345"},
+		"gender": {"raw": "M", "encoded": "23456"},
+		"dob": {"raw": "4-7-1998", "encoded": "34567"},
+		"companyroll": {"raw": "1230978", "encoded": "45678"}
+	}
+};
+	console.log(Object.keys(obj.credValues).length)
+	let l=Object.keys(obj.credValues).length;
+	for(let i=0;i<l;i++)
+	{
+		var val1=Math.floor(1000000000000000 + Math.random() * 9000000000000000);
+		console.log(val1)
+	}
+})
+
+
 
 
 //--------------------------apis for sharing credentials END-----------------------
-//Start Offering credentials
-app.post('/shareCredentials',(req,res)=>{
-	console.log("Offer  crdentials")
-	db('credential_status').returning('*').insert({'sender':req.body.sender,'recipient':req.body.recipient,'type':req.body.type})
-	.then(response=>{
-		console.log("Offering credentials initiated")
-		res.json(response)
-	})
-})
-
 //accept credential
-app.post('/acceptCredentials',(req,res)=>{
-	console.log("Accpeting credentials")
-	db('credential_status').returning('*').where({'trxid':req.body.trxid,'status':'initiated'}).update({'status':accepted})
-	.then(response=>{
-		console.log("accepted credentials")
-		res.json(response)
-	})
-})
 
 
 
