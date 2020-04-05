@@ -424,6 +424,15 @@ app.post('/createSchema',(req,res)=>{
 	})
 })
 
+app.get('/getSchemas',(req,res)=>{
+	console.log("Inside getSchemas")
+	db.select('*').from('credential_schema_1')
+	.then(data=>{
+		res.send(data)
+		console.log(data);
+	})
+})
+
 app.post('/createCredDef',(req,res)=>{
 	console.log("making credDef")
 	const token=req.headers.authorization;
