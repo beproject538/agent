@@ -444,11 +444,11 @@ app.post('/createCredDef',(req,res)=>{
 		)
 	.then(response=>{
 		console.log("Axios response",response.data)
-		//db('credential_schema_1').returning('*').where({'name':req.body.name}).update({'cred_def':'created'})
-		//.then(queryResponse=>{
-			//console.log("queryResponse",queryResponse)
+		db('credential_schema_1').returning('*').where({'name':req.body.name}).update({'cred_def':'created'})
+		.then(queryResponse=>{
+			console.log("queryResponse",queryResponse)
 			
-		//})
+		})
 		res.send(response.data)
 	})
 })
@@ -495,6 +495,16 @@ app.post('/createCredentialRequest',(req,res)=>{
 		})
 	})
 	.catch(err=>res.status(400).json('Unable to send request'))
+})
+
+app.post('/getCredentialStatus',(req,res)=>{
+	console.log("getting cred Status")
+	db.select('*').from('credential_status_1').where({'trxid':req.body.trxid})
+	.then(queryResponse=>{
+		console.log(queryResponse)
+		res.send(queryResponse)
+	})
+	.catch(err=>res.status(400).json('Unable to query data'))
 })
 
 app.post('/sendCredential',(req,res)=>{
