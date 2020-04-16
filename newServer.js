@@ -30,10 +30,28 @@ app.use(bodyParser.json());
 
 
 app.get('/', (req, res)=> {
+	var str = ["Saab", "Volvo", "BMW"];
+	console.log(str[0])
+	var json=new Object();
+	json.credValues=new Object();
+	for(var i=0;i<str.length;i++)
+	{
+		var temp=str[i];
+		json.credValues[str[i]]=new Object();
+		json.credValues[str[i]].raw=str[i];
+		json.credValues[str[i]].encoded=123;
+	}
+	const val2=Math.floor(100000 + Math.random() * 900000);
+	console.log(val2)
+
+
+
+	json.recipientdid="did";
+	console.log(json)
 	db.select('*').from('connection_status')
 	.then(data=>{
 		res.send(data)
-			console.log(data);
+			//console.log(data);
 	})
 	console.log("test")
 })
@@ -470,7 +488,7 @@ app.post('/createCredentialOffer',(req,res)=>{
 		{
 			db('credential_status_1').returning('*').insert({'schemaname':req.body.name,'senderdid':req.body.did,'recipientdid':req.body.recipientDid,'status':'offered'})
 			.then(queryResponse=>{
-				res.send(response.data)
+				res.send(queryResponse.data)
 			})
 		}
 	})
@@ -491,7 +509,7 @@ app.post('/createCredentialRequest',(req,res)=>{
 		db('credential_status_1').returning('*').where({'senderdid':req.body.recipientDid,'recipientdid':req.body.did,'status':'offered'}).update({'status':'accepted'})
 		.then(queryResponse=>{
 			console.log("queryResponse",queryResponse)
-			res.send(response.data)
+			res.send(queryResponse.data)
 		})
 	})
 	.catch(err=>res.status(400).json('Unable to send request'))
