@@ -488,7 +488,7 @@ app.post('/createCredentialOffer',(req,res)=>{
 		{
 			db('credential_status_1').returning('*').insert({'schemaname':req.body.name,'senderdid':req.body.did,'recipientdid':req.body.recipientDid,'status':'offered'})
 			.then(queryResponse=>{
-				res.send(queryResponse.data)
+				res.send(queryResponse)
 			})
 		}
 	})
@@ -509,7 +509,7 @@ app.post('/createCredentialRequest',(req,res)=>{
 		db('credential_status_1').returning('*').where({'senderdid':req.body.recipientDid,'recipientdid':req.body.did,'status':'offered'}).update({'status':'accepted'})
 		.then(queryResponse=>{
 			console.log("queryResponse",queryResponse)
-			res.send(queryResponse.data)
+			res.send(queryResponse)
 		})
 	})
 	.catch(err=>res.status(400).json('Unable to send request'))
