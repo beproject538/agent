@@ -534,6 +534,16 @@ app.post('/createCredentialRequest',(req,res)=>{
 	.catch(err=>res.status(400).json('Unable to send request'))
 })
 
+app.post('/onCredentialSend',(req,res)=>{
+	console.log("On Cred Send")
+	db('credential_status_1').returning('*').where({'senderdid':req.body.did,'recipientdid':req.body.recipientDid,'status':'accepted'}).update({'status':'sent'})
+	.then(queryResponse=>{
+		console.log(queryResponse)
+		res.send(queryResponse)
+	})
+	.catch(err=>res.status(400).json('Error'))
+})
+
 app.post('/getCredentialStatus',(req,res)=>{
 	console.log("getting cred Status")
 	db.select('*').from('credential_status_1').where({'trxid':req.body.trxid})
