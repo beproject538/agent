@@ -515,7 +515,7 @@ app.post('/createCredentialOffer',(req,res)=>{
 })
 
 app.post('/createCredentialRequest',(req,res)=>{
-	console.log("making cred Req")
+	console.log("making cred Req",req.body.recipientDid,req.body.did)
 	const token=req.headers.authorization;
 	axios.post(ledgerUrl+'/createCredentialRequest',
 	{
