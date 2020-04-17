@@ -554,6 +554,16 @@ app.post('/getCredentialStatus',(req,res)=>{
 	.catch(err=>res.status(400).json('Unable to query data'))
 })
 
+app.post('/listenForCredentialOffer',(req,res)=>{
+	console.log("Listening for offer")
+	db.select('*').from('credential_status_1').where({'recipientdid':req.body.did,'status':'offered'}).limit(1)
+	.then(queryResponse=>{
+		console.log(queryResponse);
+		res.send(queryResponse)
+	})
+	.catch(err=>res.status(400).json('Unable to query data'))
+})
+
 app.post('/sendCredential',(req,res)=>{
 	console.log("making cred")
 	const token=req.headers.authorization;
