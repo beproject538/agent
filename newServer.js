@@ -30,28 +30,37 @@ app.use(bodyParser.json());
 
 
 app.get('/', (req, res)=> {
-	var str = ["Saab", "Volvo", "BMW"];
-	console.log(str[0])
-	var json=new Object();
-	json.credValues=new Object();
-	for(var i=0;i<str.length;i++)
-	{
-		var temp=str[i];
-		json.credValues[str[i]]=new Object();
-		json.credValues[str[i]].raw=str[i];
-		json.credValues[str[i]].encoded=123;
-	}
-	const val2=Math.floor(100000 + Math.random() * 900000);
-	console.log(val2)
+	// var str = ["Saab", "Volvo", "BMW"];
+	// console.log(str[0])
+	// var json=new Object();
+	// json.credValues=new Object();
+	// for(var i=0;i<str.length;i++)
+	// {
+	// 	var temp=str[i];
+	// 	json.credValues[str[i]]=new Object();
+	// 	json.credValues[str[i]].raw=str[i];
+	// 	json.credValues[str[i]].encoded=123;
+	// }
+	// const val2=Math.floor(100000 + Math.random() * 900000);
+	// console.log(val2)
 
 
 
-	json.recipientdid="did";
-	console.log(json)
-	db.select('*').from('connection_status')
-	.then(data=>{
-		res.send(data)
-			//console.log(data);
+	//json.recipientdid="did";
+	//console.log(json)
+	 db.select('*').from('connection_status')
+	// .then(data=>{
+	// 	res.send(data)
+	// 		console.log(data);
+	// })
+	// db.column(['login_1.email','login_1.hash','rest_details_1.rest_id','rest_details_1.type','rest_details_1.end_date']).select().from('login_1').joinRaw('natural full join rest_details_1')
+	// .where({'login_1.email':req.body.email, 'login_1.hash':req.body.hash, 'rest_details_1.bill_status':1})
+	// db.from('role_1').innerJoin('connection_status_1', 'role_1.did', 'connection_status_1.recipientdid').select('*')
+	// .where({'status':'connected','senderdid':'EBQ4HS4X4WmjGmrL614gck'})
+	//db.from('role_1').innerJoin('connection_status_1', 'role_1.did', 'connection_status_1.recipientdid').where({'status':'connected','senderdid':req.body.did})
+	.then(response=>{
+		console.log(response)
+		res.send(response);
 	})
 	console.log("test")
 })
@@ -135,6 +144,16 @@ app.post('/getConnections',(req,res)=>{
 		console.log(response)
 		res.json(response);
 	})
+})
+
+app.post('/getConnectionsApp',(req,res)=>{
+	console.log("Getting connections")
+	db.from('role_1').innerJoin('connection_status_1', 'role_1.did', 'connection_status_1.recipientdid').where({'status':'connected','senderdid':req.body.did})
+	.then(queryResponse=>{
+		console.log(queryResponse)
+		res.send(queryResponse)
+	})
+	.catch(err=>res.status(400).json('No connections'))
 })
 
 
